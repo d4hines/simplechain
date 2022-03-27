@@ -1,0 +1,4 @@
+(executable
+ (name simplechain)
+ (public_name simplechain)
+ (libraries consensus))
