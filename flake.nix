@@ -27,6 +27,7 @@
             inputsFrom = lib.attrValues myDrvs;
             buildInputs = with pkgs;
               with ocamlPackages; [
+                utop
                 ocaml-lsp
                 ocamlformat
                 ocamlformat-rpc

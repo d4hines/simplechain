@@ -1,6 +1,20 @@
 { pkgs, stdenv, lib, ocamlPackages, static ? false, doCheck }:
-
 with ocamlPackages;
+let preface = buildDunePackage {
+  pname = "preface";
+  version = "0.1.0";
+  src = pkgs.fetchFromGitHub {
+    owner = "xvw";
+    repo = "preface";
+    rev = "v0.1.0";
+    sha256 = "yYzMhAhUAxy9BwZinVq4Zi1WzH0E8T9jHif9QQKcVLk=";
+  };
+  propagatedBuildInputs = [
+    either
+  ];
+  doCheck = false; 
+};
+in
 rec {
   simplechain = buildDunePackage {
     pname = "simplechain";
@@ -26,7 +40,10 @@ rec {
     ];
 
     propagatedBuildInputs = [
+      bin_prot
+      ppx_bin_prot
       alcotest
+      preface 
     ];
 
     inherit doCheck;

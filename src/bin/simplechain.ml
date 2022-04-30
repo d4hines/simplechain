@@ -1,1 +1,1 @@
-let () = print_endline Consensus.foo
+let () = print_endline "hello world"
