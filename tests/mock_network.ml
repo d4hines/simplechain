@@ -1,9 +1,13 @@
-open Networking
+open Networking_interface
 module Participant_map = Map.Make (Int)
 
 (** A perfect network: all messages are delivered faithfully
     and in order. *)
-module Perfect_network : NETWORKING = struct
+module Perfect_network : sig
+  include NETWORKING
+
+  val flush : unit -> unit
+end = struct
   let handlers = ref Participant_map.empty
   let message_queue = ref []
 

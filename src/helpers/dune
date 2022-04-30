@@ -1,3 +1,4 @@
 (library
  (name helpers)
- (wrapped false))
+ (wrapped false)
+ (libraries preface))

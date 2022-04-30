@@ -1,1 +1,1 @@
-module Make : Node_interface.NODE_INTERFACE
+module Make : Node_interface.NODE_FUNCTOR
