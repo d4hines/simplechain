@@ -1,4 +1,3 @@
-open Node_interface
 open Mock_network
 
 module Value = struct

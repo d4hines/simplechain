@@ -1,20 +1,5 @@
 { pkgs, stdenv, lib, ocamlPackages, static ? false, doCheck }:
 with ocamlPackages;
-let preface = buildDunePackage {
-  pname = "preface";
-  version = "0.1.0";
-  src = pkgs.fetchFromGitHub {
-    owner = "xvw";
-    repo = "preface";
-    rev = "v0.1.0";
-    sha256 = "yYzMhAhUAxy9BwZinVq4Zi1WzH0E8T9jHif9QQKcVLk=";
-  };
-  propagatedBuildInputs = [
-    either
-  ];
-  doCheck = false; 
-};
-in
 rec {
   simplechain = buildDunePackage {
     pname = "simplechain";
@@ -29,11 +14,11 @@ rec {
     # Static builds support, note that you need a static profile in your dune file
     buildPhase = ''
       echo "running ${if static then "static" else "release"} build"
-      dune build src/bin/service.exe --display=short --profile=${if static then "static" else "release"}
+      dune build ./src/bin/simplechain.exe --display=short --profile=${if static then "static" else "release"}
     '';
     installPhase = ''
       mkdir -p $out/bin
-      mv _build/default/bin/simplechain.exe $out/bin/service
+      mv _build/default/src/bin/simplechain.exe $out/bin/service
     '';
 
     checkInputs = [
@@ -42,8 +27,11 @@ rec {
     propagatedBuildInputs = [
       bin_prot
       ppx_bin_prot
+      qcheck
+      qcheck-alcotest
+      ppx_deriving_qcheck
       alcotest
-      preface 
+      preface
     ];
 
     inherit doCheck;

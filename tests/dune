@@ -1,3 +1,5 @@
 (tests
  (names tests)
- (libraries alcotest helpers node_interface consensus))
+ (libraries helpers node_interface consensus alcotest qcheck)
+ (preprocess
+  (pps ppx_deriving_qcheck)))

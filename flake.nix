@@ -14,7 +14,7 @@
         let
           pkgs = import nixpkgs {
             inherit system;
-            overlays = [ ocaml-overlay.overlay ];
+            overlays = [ ocaml-overlay.overlay (import ./nix/overlay.nix) ];
           };
           inherit (pkgs) lib;
           myPkgs = pkgs.recurseIntoAttrs (import ./nix {
@@ -22,7 +22,8 @@
             doCheck = true;
           }).native;
           myDrvs = lib.filterAttrs (_: value: lib.isDerivation value) myPkgs;
-        in {
+        in
+        {
           devShell = (pkgs.mkShell {
             inputsFrom = lib.attrValues myDrvs;
             buildInputs = with pkgs;
@@ -38,12 +39,13 @@
               ];
           });
 
-          defaultPackage = myPkgs.service;
+          defaultPackage = myPkgs.simplechain;
 
           defaultApp =
             flake-utils.lib.mkApp { drv = self.defaultPackage."${system}"; };
 
         };
-    in with flake-utils.lib; eachSystem defaultSystems out;
+    in
+    with flake-utils.lib; eachSystem defaultSystems out;
 
 }
