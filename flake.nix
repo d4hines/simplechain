@@ -1,25 +1,22 @@
 {
+  # Setup trusted binary caches
+  nixConfig = {
+    trusted-substituters =
+      [ "https://cache.nixos.org/" "https://anmonteiro.cachix.org" ];
+    trusted-public-keys = [ "anmonteiro.cachix.org-1:KF3QRoMrdmPVIol+I2FGDcv7M7yUajp4F2lt0567VA4=" ];
+  };
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-
-    ocaml-overlay.url = "github:anmonteiro/nix-overlays";
-    ocaml-overlay.inputs.nixpkgs.follows = "nixpkgs";
-    ocaml-overlay.inputs.flake-utils.follows = "flake-utils";
-
-    tenderbake-simulator.url = "gitlab:realD4hines/tenderbake-simulator";
+    nixpkgs.url = "github:anmonteiro/nix-overlays";
+    tenderbake-simulator.url = "gitlab:realD4hines/tenderbake-simulator/make-work-with-overlay";
     tenderbake-simulator.inputs.nixpkgs.follows = "nixpkgs";
   };
-
-  outputs = { self, nixpkgs, flake-utils, ocaml-overlay, tenderbake-simulator }:
+  outputs = { self, nixpkgs, flake-utils, tenderbake-simulator }:
     let
       out = system:
         let
           my-overlay = import ./nix/overlay.nix { tenderbake-simulator = tenderbake-simulator.packages.${system}.default; };
-          pkgs = import nixpkgs {
-            inherit system;
-            overlays =  [ ocaml-overlay.overlay my-overlay ];
-          };
+          pkgs = nixpkgs.legacyPackages."${system}".extend my-overlay;
           inherit (pkgs) lib;
           myPkgs = pkgs.recurseIntoAttrs (import ./nix {
             inherit pkgs;
@@ -50,6 +47,7 @@
 
         };
     in
-    with flake-utils.lib; eachSystem defaultSystems out;
+    with flake-utils.lib;
+    eachSystem defaultSystems out;
 
 }

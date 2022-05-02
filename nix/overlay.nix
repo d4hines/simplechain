@@ -2,8 +2,8 @@
 {
   ocamlPackages = prev.ocamlPackages.overrideScope'
     (oself: osuper:
-      with osuper;
-      rec {
+      with oself;
+      {
         preface = buildDunePackage {
           pname = "preface";
           version = "0.1.0";
