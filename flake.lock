@@ -15,6 +15,21 @@
         "type": "github"
       }
     },
+    "flake-utils_2": {
+      "locked": {
+        "lastModified": 1649676176,
+        "narHash": "sha256-OWKJratjt2RW151VUlJPRALb7OU2S5s+f0vLj4o1bHM=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "a4b154ebbdc88c8498a5c7b01589addc9e9cb678",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1646939531,
@@ -55,7 +70,29 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "ocaml-overlay": "ocaml-overlay"
+        "ocaml-overlay": "ocaml-overlay",
+        "tenderbake-simulator": "tenderbake-simulator"
+      }
+    },
+    "tenderbake-simulator": {
+      "inputs": {
+        "flake-utils": "flake-utils_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1651518631,
+        "narHash": "sha256-oNNKCsGXFfJDky4ALBVlIRUAR+8WurGmSEL983WW8+w=",
+        "owner": "realD4hines",
+        "repo": "tenderbake-simulator",
+        "rev": "b9f4d89a8b74f923c0d17f8dcb46037e43a8a668",
+        "type": "gitlab"
+      },
+      "original": {
+        "owner": "realD4hines",
+        "repo": "tenderbake-simulator",
+        "type": "gitlab"
       }
     }
   },

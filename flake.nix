@@ -6,15 +6,19 @@
     ocaml-overlay.url = "github:anmonteiro/nix-overlays";
     ocaml-overlay.inputs.nixpkgs.follows = "nixpkgs";
     ocaml-overlay.inputs.flake-utils.follows = "flake-utils";
+
+    tenderbake-simulator.url = "gitlab:realD4hines/tenderbake-simulator";
+    tenderbake-simulator.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, ocaml-overlay }:
+  outputs = { self, nixpkgs, flake-utils, ocaml-overlay, tenderbake-simulator }:
     let
       out = system:
         let
+          my-overlay = import ./nix/overlay.nix { tenderbake-simulator = tenderbake-simulator.packages.${system}.default; };
           pkgs = import nixpkgs {
             inherit system;
-            overlays = [ ocaml-overlay.overlay (import ./nix/overlay.nix) ];
+            overlays =  [ ocaml-overlay.overlay my-overlay ];
           };
           inherit (pkgs) lib;
           myPkgs = pkgs.recurseIntoAttrs (import ./nix {

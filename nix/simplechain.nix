@@ -2,6 +2,7 @@
 with ocamlPackages;
 rec {
   simplechain = buildDunePackage {
+    useDune2 = true;
     pname = "simplechain";
     version = "0.1.0";
 
@@ -25,6 +26,7 @@ rec {
     ];
 
     propagatedBuildInputs = [
+      tenderbatter
       bin_prot
       ppx_bin_prot
       qcheck

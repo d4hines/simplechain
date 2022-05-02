@@ -1,4 +1,4 @@
-final: prev:
+{ tenderbake-simulator }: final: prev:
 {
   ocamlPackages = prev.ocamlPackages.overrideScope'
     (oself: osuper:
@@ -7,6 +7,7 @@ final: prev:
         preface = buildDunePackage {
           pname = "preface";
           version = "0.1.0";
+          useDune2 = true;
           src = prev.fetchFromGitHub {
             owner = "xvw";
             repo = "preface";
@@ -20,6 +21,7 @@ final: prev:
         };
         qcheck-core = osuper.qcheck-core.overrideAttrs (_: rec {
           version = "0.19-dev";
+          useDune2 = true;
           src = prev.fetchFromGitHub {
             owner = "c-cube";
             repo = "qcheck";
@@ -29,8 +31,10 @@ final: prev:
         });
         ppx_deriving_qcheck = buildDunePackage {
           pname = "ppx_deriving_qcheck";
-          inherit (qcheck-core) version useDune2 src;
+          inherit (qcheck-core) version src;
+          useDune2 = true;
           propagatedBuildInputs = [ qcheck-core ppxlib ppx_deriving ];
         };
+        tenderbatter = tenderbake-simulator;
       });
 }
