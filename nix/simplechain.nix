@@ -29,6 +29,7 @@ rec {
       tenderbatter
       bin_prot
       ppx_bin_prot
+      ppx_deriving_encoding
       qcheck
       qcheck-alcotest
       ppx_deriving_qcheck

@@ -3,4 +3,6 @@
  (libraries helpers node_interface preface tenderbatter)
  ; TODO: This seems wrong. How do I get dune
  ; to wrap all the modules in this folder behind a module Consenus?
- (wrapped false))
+ (wrapped false)
+ (preprocess
+  (pps ppx_deriving_encoding)))

@@ -35,6 +35,18 @@
           useDune2 = true;
           propagatedBuildInputs = [ qcheck-core ppxlib ppx_deriving ];
         };
+        ppx_deriving_encoding = buildDunePackage {
+          pname = "ppx_deriving_encoding";
+          version = "dev";
+          useDune2 = true;
+          src = prev.fetchFromGitLab {
+            owner = "o-labs";
+            repo = "ppx_deriving_encoding";
+            rev = "a8f7c425baa3cfad53756de91e962fdfc755d675";
+            sha256 = "sha256-rKOum9leE+7JHW/3wEvFznMRgsY0xdS+v/AL+gIv1EY=";
+          };
+          propagatedBuildInputs = [ ppxlib json-data-encoding ];
+        };
         tenderbatter = tenderbake-simulator;
       });
 }
