@@ -6,10 +6,15 @@ module Make (Ord : Map.OrderedType) = struct
   let empty = M.empty
 
   let add s =
-    M.update s (function Some count -> Some (count + 1) | None -> Some 1)
+    M.update s (function
+      | Some count -> Some (count + 1)
+      | None -> Some 1)
 
   let of_list = List.fold_left (fun m x -> add x m) empty
-  let count s m = match M.find_opt s m with Some count -> count | None -> 0
+  let count s m =
+    match M.find_opt s m with
+    | Some count -> count
+    | None -> 0
 
   let majority m =
     M.bindings m

@@ -18,4 +18,4 @@ end
 
 let () =
   let open Alcotest in
-  run "Test" [ ("Degenerate consensus", Test_degenerate_consensus.tests) ]
+  run "Test" [("Degenerate consensus", Test_degenerate_consensus.tests)]

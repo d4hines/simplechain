@@ -26,6 +26,7 @@ rec {
     ];
 
     propagatedBuildInputs = [
+      digestif
       tenderbatter
       bin_prot
       ppx_bin_prot

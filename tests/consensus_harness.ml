@@ -32,16 +32,14 @@ module Make (Consensus : Node_interface.NODE_INTERFACE) = struct
     let value = Value.random () in
     propose_via_random ~value nodes;
     let level, value =
-      List.find Node.is_honest nodes |> Node.latest_commitment
-    in
+      List.find Node.is_honest nodes |> Node.latest_commitment in
     Perfect_network.flush ();
     assert (all_honest_nodes_agree_on ~level ~value nodes)
 
   let test_validity ~honest_nodes ~byzantine_nodes =
     let init_value = Value.random () in
     let nodes =
-      init_network ~honest_nodes ~byzantine_nodes (fun _ -> init_value)
-    in
+      init_network ~honest_nodes ~byzantine_nodes (fun _ -> init_value) in
     let proposed_value = Value.random () in
     propose_via_random ~value:proposed_value nodes;
     let level, _ = List.hd nodes |> Node.latest_commitment in

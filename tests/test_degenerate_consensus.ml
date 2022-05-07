@@ -11,7 +11,8 @@ let test_validity () =
     Degenerate_harness.test_validity ~honest_nodes:5 ~byzantine_nodes:0;
     (* Degenerate consensus lacks validity *)
     assert false
-  with _ -> ()
+  with
+  | _ -> ()
 
 let tests =
   let open Alcotest in
