@@ -16,6 +16,6 @@ end
 (* module Consensus = Consensus.Make (Value) *)
 (* module Side_effect = Consensus.Side_effect *)
 
-let () =
-  let open Alcotest in
-  run "Test" [("Degenerate consensus", Test_degenerate_consensus.tests)]
+(* let () =
+   let open Alcotest in
+   run "Test" [("Degenerate consensus", Test_degenerate_consensus.tests)] *)

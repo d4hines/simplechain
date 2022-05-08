@@ -1,8 +1,6 @@
 (library
  (name consensus)
- (libraries helpers node_interface preface tenderbatter)
+ (libraries helpers crypto node_interface preface tenderbatter)
  ; TODO: This seems wrong. How do I get dune
  ; to wrap all the modules in this folder behind a module Consenus?
- (wrapped false)
- (preprocess
-  (pps ppx_deriving_encoding)))
+ (wrapped false))

@@ -1,4 +1,4 @@
-open Digestif
+open Crypto
 open Tenderbatter
 
 type t = {
@@ -8,11 +8,15 @@ type t = {
   prev_block_hash : BLAKE2B.t;
 }
 
-module type M_type = sig
-  val hash : string -> 'a
-  (* etc. *)
-end
-
-let foo (module M : M_type) =
-  let open M in
-  hash "hello"
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun { proposer; transactions; hash; prev_block_hash } ->
+      (proposer, transactions, hash, prev_block_hash))
+    (fun (proposer, transactions, hash, prev_block_hash) ->
+      { proposer; transactions; hash; prev_block_hash })
+  @@ obj4
+       (req "proposer" Node.Id.encoding)
+       (req "transactions" bytes)
+       (req "hash" BLAKE2B.encoding)
+       (req "prev_block_hash" BLAKE2B.encoding)

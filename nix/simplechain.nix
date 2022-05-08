@@ -30,6 +30,14 @@ rec {
       tenderbatter
       bin_prot
       ppx_bin_prot
+      secp256k1-internal
+
+      mirage-crypto
+      mirage-crypto-pk
+      mirage-crypto-rng
+      mirage-crypto-ec
+
+      ppx_deriving_yojson
       ppx_deriving_encoding
       qcheck
       qcheck-alcotest
