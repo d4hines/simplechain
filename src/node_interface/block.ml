@@ -13,6 +13,6 @@ module type M_type = sig
   (* etc. *)
 end
 
-let foo (module M : M_type) = 
+let foo (module M : M_type) =
   let open M in
   hash "hello"
