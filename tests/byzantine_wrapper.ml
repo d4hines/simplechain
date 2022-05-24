@@ -11,16 +11,14 @@ struct
   module Byzantine = Honest.Byzantine
 
   type t =
-    | Honest    of Honest.t
+    | Honest of Honest.t
     | Byzantine of Byzantine.t
 
   let self = function
     | Honest t -> Honest.self t
     | Byzantine t -> Byzantine.self t
 
-  let is_honest = function
-    | Honest _ -> true
-    | Byzantine _ -> false
+  let is_honest = function Honest _ -> true | Byzantine _ -> false
 
   let latest_commitment = function
     | Honest t -> Honest.latest_commitment t
@@ -38,8 +36,6 @@ struct
     |> List.mapi (fun id honest ->
            let config = Node_interface.{ self = id; participants } in
            let init_value = init_fn id in
-           if honest then
-             Honest (Honest.init ~config init_value)
-           else
-             Byzantine (Byzantine.init ~config init_value))
+           if honest then Honest (Honest.init ~config init_value)
+           else Byzantine (Byzantine.init ~config init_value))
 end

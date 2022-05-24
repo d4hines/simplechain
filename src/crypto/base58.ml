@@ -68,7 +68,6 @@ module Prefix = struct
 end
 
 let base = 58
-
 let zbase = Z.of_int base
 
 module Alphabet = struct
@@ -96,9 +95,7 @@ module Alphabet = struct
     make "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
   let ripple = make "rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz"
-
   let flickr = make "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
-
   let default = bitcoin
 end
 
@@ -120,18 +117,20 @@ let raw_encode ?(alphabet = Alphabet.default) s =
   let res = Bytes.make res_len '\000' in
   let s = Z.of_bits s in
   let rec loop s i =
-    if s = Z.zero then
-      i
+    if s = Z.zero then i
     else
       let s, r = Z.div_rem s zbase in
       Bytes.set res i (to_char ~alphabet (Z.to_int r));
-      loop s (i - 1) in
+      loop s (i - 1)
+  in
   let i = loop s (res_len - 1) in
   let ress = Bytes.sub_string res (i + 1) (res_len - i - 1) in
   String.make zeros zero ^ ress
 
 let checksum s =
-  let hash = Mirage_crypto.Hash.SHA256.(digest (digest (Cstruct.of_string s))) in
+  let hash =
+    Mirage_crypto.Hash.SHA256.(digest (digest (Cstruct.of_string s)))
+  in
   String.sub (Cstruct.to_string hash) 0 4
 
 (* Append a 4-bytes cryptographic checksum before encoding string s *)
@@ -149,23 +148,20 @@ module TzString = struct
   let remove_prefix ~prefix s =
     let x = String.length prefix in
     let n = String.length s in
-    if n >= x && String.sub s 0 x = prefix then
-      Some (String.sub s x (n - x))
-    else
-      None
+    if n >= x && String.sub s 0 x = prefix then Some (String.sub s x (n - x))
+    else None
 end
 
 let count_leading_char s c =
   let len = String.length s in
   let rec loop i =
-    if i = len then len else if s.[i] <> c then i else loop (i + 1) in
+    if i = len then len else if s.[i] <> c then i else loop (i + 1)
+  in
   loop 0
 
 let of_char ?(alphabet = Alphabet.default) x =
   let pos = alphabet.decode.[int_of_char x] in
-  match pos with
-  | '\255' -> None
-  | _ -> Some (int_of_char pos)
+  match pos with '\255' -> None | _ -> Some (int_of_char pos)
 
 let raw_decode ?(alphabet = Alphabet.default) s =
   TzString.fold_left
@@ -184,8 +180,7 @@ let raw_decode ?(alphabet = Alphabet.default) s =
 let safe_decode ?alphabet s =
   Option.bind (raw_decode ?alphabet s) (fun s ->
       let len = String.length s in
-      if len < 4 then
-        None
+      if len < 4 then None
       else
         (* only if the string is long enough to extract a checksum do we check it *)
         let msg = String.sub s 0 (len - 4) in
