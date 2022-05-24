@@ -89,9 +89,9 @@ module Make (A : Simulator.Algorithm) = struct
         match failed_at with
         | None -> ()
         | Some i ->
-            save_log ~failed:true;
-            Alcotest.failf "predicate %s failed at iteration %d (seed %d)" name
-              i seed
+          save_log ~failed:true;
+          Alcotest.failf "predicate %s failed at iteration %d (seed %d)" name i
+            seed
       in
       List.iter check_predicate pred_results;
       if not (config.final_state_check final_state) then (
