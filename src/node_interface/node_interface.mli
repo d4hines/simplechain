@@ -5,6 +5,7 @@ type config = {
   self : Participant.t;
   participants : Participant.t list;
 }
+
 type level = int
 
 module type NODE_FUNCTOR = functor
