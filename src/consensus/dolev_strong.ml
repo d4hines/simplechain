@@ -7,9 +7,17 @@ type consensus_params = {
   delta : float;
 }
 
+let consensus_params_encoding =
+  let open Data_encoding in
+  conv
+    (fun { n; f; delta } -> (Int64.of_int n, Int64.of_int f, delta))
+    (fun (n, f, delta) -> { n = Int64.to_int n; f = Int64.to_int f; delta })
+  @@ obj3 (req "n" int64) (req "f" int64) (req "delta" float)
+
 module Convincing_blocks : sig
   type t
 
+  val encoding : t Data_encoding.t
   val empty : t
 
   val add_block :
@@ -19,11 +27,15 @@ module Convincing_blocks : sig
     t ->
     t * bool
 
-  val get_convincing_block : locked_block:Block.t -> t -> Block.t
+  val get_convincing_block : locked_block:Block.t -> t -> Block.t option
 end = struct
   module Block_set = Set.Make (Block)
 
   type t = Block_set.t
+
+  let encoding =
+    let open Data_encoding in
+    conv Block_set.elements Block_set.of_list (list Block.encoding)
 
   let empty = Block_set.empty
 
@@ -50,10 +62,7 @@ end = struct
     else (t, false)
 
   let get_convincing_block ~locked_block t =
-    if Block_set.cardinal t = 1 then Block_set.choose t
-    else
-      let level = Int64.add locked_block.Block.level 1L in
-      Block.empty ~level ~prev_block_hash:locked_block.hash
+    if Block_set.cardinal t = 1 then Some (Block_set.choose t) else None
 end
 
 module Algorithm = struct
@@ -68,11 +77,22 @@ module Algorithm = struct
     locked_block : Block.t;
   }
 
-  let node_state_encoding = assert false
+  let node_state_encoding =
+    let open Data_encoding in
+    conv
+      (fun { self; round; convincing_blocks; locked_block } ->
+        (self, Int64.of_int round, convincing_blocks, locked_block))
+      (fun (self, round, convincing_blocks, locked_block) ->
+        { self; round = Int64.to_int round; convincing_blocks; locked_block })
+    @@ obj4
+         (req "self" Tenderbatter.Node.Id.encoding)
+         (req "round" int64)
+         (req "convincing_blocks" Convincing_blocks.encoding)
+         (req "locked_block" Block.encoding)
 
   type params = consensus_params
 
-  let params_encoding = assert false
+  let params_encoding = consensus_params_encoding
 
   let init_node_state _params self =
     {
@@ -89,10 +109,6 @@ include Tenderbatter.Simulator.Make (Algorithm)
 let is_proposer_for_level ~params ~level proposer =
   Int64.to_int level mod params.n = Tenderbatter.Node.Id.to_int proposer
 
-let is_next_block ~state block =
-  block.Block.prev_block_hash = state.Algorithm.locked_block.hash
-  && block.level = Int64.add state.locked_block.level 1L
-
 let sign_block_and_broadcast ~private_key block_and_signatures =
   let message =
     Block_and_signatures.add_signature block_and_signatures private_key
@@ -107,44 +123,25 @@ let good_node : event_handler =
  fun params time event private_key state ->
   let open Tenderbatter in
   match event with
-  | Event.Message_received block_and_signatures ->
-    if is_next_block ~state block_and_signatures.block then
-      let convincing_blocks, added_block =
-        Convincing_blocks.add_block ~params ~current_round:state.round
-          ~block_and_signatures state.convincing_blocks
-      in
-      let state = { state with convincing_blocks } in
-      if added_block then
-        ([sign_block_and_broadcast ~private_key block_and_signatures], state)
-      else ([], state)
-    else ([], state)
+  | Event.Message_received _block_and_signatures -> ([], state)
   | Event.Wake_up ->
     let state = { state with round = state.round + 1 } in
     let next_time = Time.add time (Time.from_float params.delta) in
     let wake_up = Effect.Set_wake_up_time next_time in
-    if state.round > params.f + 1 then
-      let next_block_level = state.locked_block.level |> Int64.add 1L in
-      let should_propose_new_block =
-        is_proposer_for_level ~params ~level:next_block_level state.self
-      in
-      if should_propose_new_block then
-        (* Mock mempool *)
-        let transactions = [Transaction.originate ()] in
-        let next_block =
-          Block.make ~transactions ~level:next_block_level
-            ~prev_block_hash:state.locked_block.hash
-        in
-        let state =
-          Algorithm.
-            {
-              self = state.self;
-              round = 1;
-              convincing_blocks = Convincing_blocks.empty;
-              locked_block =
-                Convincing_blocks.get_convincing_block
-                  ~locked_block:state.locked_block state.convincing_blocks;
-            }
-        in
-        ([propose_new_block ~private_key next_block], state)
-      else ([wake_up], state)
-    else ([wake_up], state)
+    (* Mock mempool *)
+    let transactions = [Transaction.originate ()] in
+    let next_block_level = state.locked_block.level |> Int64.add 1L in
+    let next_block =
+      Block.make ~transactions ~level:next_block_level
+        ~prev_block_hash:state.locked_block.hash
+    in
+    let state =
+      Algorithm.
+        {
+          self = state.self;
+          round = 1;
+          convincing_blocks = Convincing_blocks.empty;
+          locked_block = next_block;
+        }
+    in
+    ([wake_up], state)

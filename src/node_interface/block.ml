@@ -22,9 +22,6 @@ let make ~transactions ~level ~prev_block_hash =
   let hash = hash ~transactions ~level ~prev_block_hash in
   { transactions; level; hash; prev_block_hash }
 
-let empty ~level ~prev_block_hash =
-  make ~transactions:[] ~level ~prev_block_hash
-
 let genesis =
   {
     transactions = [];
@@ -51,6 +48,7 @@ let encoding =
        (req "prev_block_hash" BLAKE2B.encoding)
 
 let compare a b = BLAKE2B.compare a.hash b.hash
+let compare_level a b = Int64.compare a.level b.level
 let sign block private_key = Signed.make private_key BLAKE2B.encoding block.hash
 
 let is_next_block ~current ~next =
