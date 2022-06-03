@@ -1,0 +1,10 @@
+(test
+ (name tenderbatter_test)
+ (libraries
+  alcotest
+  crowbar
+  emmy_plus_test
+  framework_test
+  ouroboros_test
+  tenderbake_test
+  tenderbatter))

@@ -1,0 +1,5 @@
+(library
+ (name tenderbatter_helpers)
+ (libraries alcotest crowbar tenderbatter)
+ (flags
+  (:standard -w +A-4-40-41-42-44-45-48-70 -warn-error +A-3-44)))
