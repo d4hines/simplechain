@@ -1,0 +1,3 @@
+(library
+ (name dolev_strong_test)
+ (libraries consensus alcotest tenderbatter tenderbatter_test_helpers))

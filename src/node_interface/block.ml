@@ -52,3 +52,7 @@ let encoding =
 
 let compare a b = BLAKE2B.compare a.hash b.hash
 let sign block private_key = Signed.make private_key BLAKE2B.encoding block.hash
+
+let is_next_block ~current ~next =
+  BLAKE2B.equal next.prev_block_hash current.hash
+  && next.level = Int64.add current.level 1L

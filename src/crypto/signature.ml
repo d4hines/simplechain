@@ -58,4 +58,6 @@ let of_string =
 let to_yojson, of_yojson =
   Yojson_ext.with_yojson_string "signature" to_string of_string
 
-let encoding = assert false
+let encoding =
+  let open Data_encoding in
+  conv to_string (fun s -> of_string s |> Option.get) string

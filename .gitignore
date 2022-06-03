@@ -31,3 +31,6 @@ _opam/
 .direnv
 
 result
+
+
+*stress-test-logs

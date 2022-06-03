@@ -58,9 +58,9 @@ end = struct
   let encoding =
     let open Data_encoding in
     conv
-      (fun hash -> to_raw_string hash)
-      (fun string -> string |> of_raw_string |> Option.get)
-      (Fixed.string size)
+      (fun hash -> to_string hash)
+      (fun string -> string |> of_string |> Option.get)
+      string
 end
 
 module BLAKE2B_20 = Make (struct

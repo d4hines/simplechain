@@ -32,6 +32,12 @@ let rec fold_left_ok f state = function
 let unzip l =
   List.fold_left (fun (al, bl) (a, b) -> (a :: al, b :: bl)) ([], []) l
 
+let rec zip a b =
+  match (a, b) with
+  | [], _ -> []
+  | _, [] -> []
+  | x :: xs, y :: ys -> (x, y) :: zip xs ys
+
 let shuffle l =
   List.map (fun c -> (Random.bits (), c)) l
   |> List.sort (fun (a, _) (b, _) -> Int.compare a b)
