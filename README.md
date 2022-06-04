@@ -1,14 +1,13 @@
 # Simple Chain
 
-Consensus: https://www.cs.utexas.edu/users/misra/psp.dir/consensus.pdf
+A playground for building and testing simple blockchains with different consensus algorithms.
 
-Networking: https://github.com/marigold-dev/pollinate
+- Testing and simulation framework: [Tenderbatter](https://gitlab.com/nomadic-labs/tenderbake-simulator) 🧁
+- Package management: Nix ❄️
+- P2P gossip: [Pollinate](https://github.com/marigold-dev/pollinate) 🐝
+- Crypto primitives borrowed from https://github.com/marigold-dev/deku 🪛
 
-## Tasks
-
-- [ ] Unit tests for consensus
-- [ ] prop tests for consensus
-- [ ] Coq proof
-- [ ] Coq extraction
-- [ ] Theoretical TPS
-- [ ] Benchmarks
+## Consensus Algorithms
+- Dolev-strong - see [README](./src/consensus/dolev_strong/README.md)
+- Tendermint (TODO) 
+- Hotstuff-sync (TODO)
