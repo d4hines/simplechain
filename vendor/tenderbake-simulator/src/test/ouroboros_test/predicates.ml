@@ -25,7 +25,7 @@
 
 open Tenderbatter
 open Ouroboros
-module List = Helpers.List
+module List = Tenderbatter_test_helpers.Helpers.List
 
 (** A generic safety predicate
 

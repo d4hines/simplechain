@@ -25,7 +25,7 @@
 
 open Tenderbatter
 open Emmy_plus
-module List = Helpers.List
+module List = Tenderbatter_test_helpers.Helpers.List
 
 (** Emmy+ Safety and Liveness Predicates
 

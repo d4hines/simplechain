@@ -1,6 +1,5 @@
 (library
  (name tenderbatter)
- (public_name tenderbatter)
  (libraries base64 bheap cryptokit data-encoding ezjsonm owl-base)
  (flags
   (:standard -w +A-4-40-41-42-44-45-48 -warn-error +A-3-44)))

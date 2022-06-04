@@ -26,9 +26,7 @@
 let () =
   let open Alcotest in
   run "Unit tests"
-    [
-      ("Framework", Framework_test.test_cases);
-      ("Ouroboros", Ouroboros_test.test_cases);
-      ("Emmy+", Emmy_plus_test.test_cases);
-      ("Tenderbake", Tenderbake_test.test_cases);
-    ]
+    [ (* ("Framework", Framework_test.test_cases);
+         ("Ouroboros", Ouroboros_test.test_cases);
+         ("Emmy+", Emmy_plus_test.test_cases);
+         ("Tenderbake", Tenderbake_test.test_cases); *) ]

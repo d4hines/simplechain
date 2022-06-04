@@ -1,6 +1,3 @@
 (library
  (name consensus)
- (libraries helpers crypto node_interface preface tenderbatter)
- ; TODO: This seems wrong. How do I get dune
- ; to wrap all the modules in this folder behind a module Consenus?
- (wrapped false))
+ (libraries dolev_strong))

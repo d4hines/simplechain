@@ -8,14 +8,12 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:anmonteiro/nix-overlays";
-    tenderbake-simulator.url = "gitlab:realD4hines/tenderbake-simulator/make-work-with-overlay";
-    tenderbake-simulator.inputs.nixpkgs.follows = "nixpkgs";
   };
-  outputs = { self, nixpkgs, flake-utils, tenderbake-simulator }:
+  outputs = { self, nixpkgs, flake-utils }:
     let
       out = system:
         let
-          my-overlay = import ./nix/overlay.nix { tenderbake-simulator = tenderbake-simulator.packages.${system}.default; };
+          my-overlay = import ./nix/overlay.nix;
           pkgs = nixpkgs.legacyPackages."${system}".extend my-overlay;
           inherit (pkgs) lib;
           myPkgs = pkgs.recurseIntoAttrs (import ./nix {

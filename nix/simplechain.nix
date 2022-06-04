@@ -27,7 +27,6 @@ rec {
 
     propagatedBuildInputs = [
       digestif
-      tenderbatter
       bin_prot
       ppx_bin_prot
       secp256k1-internal
@@ -37,6 +36,7 @@ rec {
       mirage-crypto-rng
       mirage-crypto-ec
 
+
       ppx_deriving_yojson
       ppx_deriving_encoding
       qcheck
@@ -44,6 +44,9 @@ rec {
       ppx_deriving_qcheck
       alcotest
       preface
+
+      # tenderbatter deps
+      data-encoding
     ];
 
     inherit doCheck;

@@ -1,6 +1,5 @@
 {
     "ocaml.sandbox": {
-        "kind": "custom",
-        "template": "nix develop /home/d4hines/repos/simplechain -c $prog $args"
+        "kind": "global"
     }
 }

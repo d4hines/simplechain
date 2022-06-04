@@ -25,7 +25,7 @@
 
 open Tenderbatter
 open Tenderbake
-module List = Helpers.List
+module List = Tenderbatter_test_helpers.Helpers.List
 
 (** Initial Predicate Design
 

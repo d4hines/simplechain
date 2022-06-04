@@ -25,7 +25,7 @@
 
 open Tenderbatter
 open Tenderbake
-module Test = Helpers.Make (Algorithm)
+module Test = Tenderbatter_test_helpers.Helpers.Make (Algorithm)
 
 let stress_test_config : Test.config =
   let total_nodes = 10 in

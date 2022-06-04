@@ -1,4 +1,4 @@
-{ tenderbake-simulator }: final: prev:
+final: prev:
 {
   ocamlPackages = prev.ocamlPackages.overrideScope'
     (oself: osuper:
@@ -47,6 +47,29 @@
           };
           propagatedBuildInputs = [ ppxlib json-data-encoding ];
         };
-        tenderbatter = tenderbake-simulator;
+        data-encoding = buildDunePackage {
+          pname = "data-encoding";
+          version = "0.3";
+          useDune2 = true;
+          src = prev.fetchFromGitLab {
+            owner = "nomadic-labs";
+            repo = "data-encoding";
+            rev = "ec00948c4ad431a101e66a5a8c855f9252f34959";
+            sha256 = "sha256-b4VQ9t/H/Hs9EENq2o2CHGM9LdhyuPC8nXZEHPjUPOs=";
+          };
+          propagatedBuildInputs = [
+            base64
+            bheap
+            cryptokit
+            owl-base
+            crowbar
+            ezjsonm
+            zarith
+            json-data-encoding
+            json-data-encoding-bson
+          ];
+          doCheck = false;
+        };
+
       });
 }

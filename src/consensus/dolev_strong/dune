@@ -1,0 +1,5 @@
+(library
+ (name dolev_strong)
+ (libraries helpers crypto node_interface preface tenderbatter)
+ (preprocess
+  (pps ppx_deriving.ord ppx_deriving.eq ppx_deriving_yojson ppx_let_binding)))
