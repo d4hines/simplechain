@@ -8,10 +8,11 @@ module type PARAMS = sig
   module Value : VALUE
 
   val is_valid_next_value : Value.t -> bool
-  val proposer : Node.Id.t
+  val is_proposer : Node.Id.t -> bool
+  val get_next_value : unit -> Value.t
 end
 
-module Singleshot (Params : PARAMS) = struct
+module Make (Params : PARAMS) = struct
   module Value = Params.Value
   module Value_and_signatures = Value_and_signatures (Value)
 
@@ -60,7 +61,7 @@ module Singleshot (Params : PARAMS) = struct
       in
       let actual_block_producer = Signature.signer first_signature in
       Params.is_valid_next_value value
-      && actual_block_producer = Params.proposer
+      && Params.is_proposer actual_block_producer
       && List.length signatures >= current_round
 
     let add_value ~current_round
@@ -86,19 +87,21 @@ module Singleshot (Params : PARAMS) = struct
       self : Tenderbatter.Node.Id.t;
       round : int;
       convincing_values : Convincing_values.t;
+      final_value : Value.t option;
     }
 
     let node_state_encoding =
       let open Data_encoding in
       conv
-        (fun { self; round; convincing_values } ->
-          (self, Int64.of_int round, convincing_values))
-        (fun (self, round, convincing_values) ->
-          { self; round = Int64.to_int round; convincing_values })
-      @@ obj3
+        (fun { self; round; convincing_values; final_value } ->
+          (self, Int64.of_int round, convincing_values, final_value))
+        (fun (self, round, convincing_values, final_value) ->
+          { self; round = Int64.to_int round; convincing_values; final_value })
+      @@ obj4
            (req "self" Tenderbatter.Node.Id.encoding)
            (req "round" int64)
            (req "convincing_blocks" Convincing_values.encoding)
+           (req "final_value" @@ option Value.encoding)
 
     type params = consensus_params
 
@@ -107,9 +110,9 @@ module Singleshot (Params : PARAMS) = struct
     let init_node_state _params self =
       {
         self;
-        (* 1-indexed so we can say that we terminate on round f + 1 *)
-        round = 1;
+        round = 0;
         convincing_values = Convincing_values.empty;
+        final_value = None;
       }
   end
 
@@ -121,75 +124,79 @@ module Singleshot (Params : PARAMS) = struct
     in
     Ok (Effect.Send_message message)
 
-  let propose_new_block ~private_key value =
+  let propose_new_value ~private_key value =
     let message = Value_and_signatures.make ~private_key value in
     Effect.Send_message message
 
+  let jitter = 0.1
+
+  let exit a =
+    Format.printf "\n%!";
+    a
+
   let honest_node : event_handler =
    fun params time event private_key state ->
-    match event with
-    | Event.Message_received value_and_signatures -> (
-      match
-        Convincing_values.add_value ~current_round:state.round
-          ~value_and_signatures state.convincing_values
-      with
-      | Ok convincing_values -> assert false
-      | Error _ -> ([], state))
-    | Event.Wake_up -> assert false
+    if Option.is_some state.final_value then
+      (* Early exit useful for debugging. *)
+      ([], state)
+    else (
+      Format.printf "Node %s, " (Node.Id.to_int state.self |> string_of_int);
+      Format.printf "Time %s, " (Time.to_float time |> Float.to_string);
+      match event with
+      | Event.Message_received value_and_signatures -> (
+        match
+          Convincing_values.add_value ~current_round:state.round
+            ~value_and_signatures state.convincing_values
+        with
+        | Ok convincing_values ->
+          Format.printf "got a convincing message ";
+          let state = { state with convincing_values } in
+          let broadcast =
+            sign_block_and_broadcast ~private_key value_and_signatures
+            (* TODO: I already checked that the signatures were valid. Refactor this away. *)
+            |> Result.get_ok
+          in
+          exit ([broadcast], state)
+        | Error _ ->
+          Format.printf "Already got this message";
+          exit ([], state))
+      | Event.Wake_up ->
+        let current_round = state.round in
+        let state = { state with round = state.round + 1 } in
+        if current_round < (2 * params.f) + 1 then
+          let next_time = Time.add time (Time.from_float params.delta) in
+          let wake_up = Effect.Set_wake_up_time next_time in
+          if Params.is_proposer state.self then (
+            Format.printf "proposing value";
+            let value = Params.get_next_value () in
+            let propose_new_value = propose_new_value ~private_key value in
+            let state = { state with final_value = Some value } in
+            exit ([wake_up; propose_new_value], state))
+          else (
+            Format.printf "not propser, doing nothing";
+            exit ([wake_up], state))
+        else
+          (* Consensus is over. Terminate indefinitely with a final value *)
+          let final_value =
+            if Params.is_proposer state.self then
+              (* If we are the proposer, we already know the final value *)
+              state.final_value
+            else Convincing_values.get_convincing_value state.convincing_values
+          in
+          let final_value_str =
+            match final_value with
+            | Some x ->
+              Format.sprintf "Some %s" (x |> Obj.magic |> Int64.to_string)
+            | None -> "None"
+          in
+          Format.printf "terminating with value: %s" final_value_str;
+          let new_state = { state with final_value } in
+          exit ([], new_state))
+
+  let crash_fault_node : event_handler =
+   fun params time event private_key state ->
+    if Random.bool () then (
+      Format.printf "Node %d crashing.\n%!" (Node.Id.to_int state.self);
+      ([Effect.Shut_down], state))
+    else honest_node params time event private_key state
 end
-
-(*
-     let honest_node : event_handler =
-      fun params time event private_key state ->
-       let open Tenderbatter in
-       match event with
-       | Event.Message_received block_and_signatures ->
-         if Block.is_next_block
-         let Block_and_signatures.{ block; _ } = block_and_signatures in
-         let state = { state with locked_block = block } in
-         if Block.is_next_block ~state block_and_signatures.block then
-           let convincing_blocks, added_block =
-             Convincing_blocks.add_block ~params ~current_round:state.round
-               ~block_and_signatures state.convincing_blocks
-           in
-           let state = { state with convincing_blocks } in
-           if added_block then
-             ([sign_block_and_broadcast ~private_key block_and_signatures], state)
-           else ([], state)
-         else ([], state)
-         ([], state)
-       | Event.Wake_up ->
-         let state = { state with round = state.round + 1 } in
-         let next_time = Time.add time (Time.from_float params.delta) in
-         let wake_up = Effect.Set_wake_up_time next_time in
-         if is_proposer_for_time ~params ~time state.self then (
-           (* Mock mempool *)
-           let transactions = [Transaction.originate ()] in
-           let next_block_level = state.locked_block.level |> Int64.add 1L in
-           let next_block =
-             Block.make ~transactions ~level:next_block_level
-               ~prev_block_hash:state.locked_block.hash
-           in
-           let propose_new_block = propose_new_block ~private_key next_block in
-           let state =
-             Algorithm.
-               {
-                 self = state.self;
-                 round = 1;
-                 convincing_blocks = Convincing_blocks.empty;
-                 locked_block = next_block;
-               }
-           in
-           Format.printf "Node %d proposing block level %d\n%!"
-             (Node.Id.to_int state.self)
-             (next_block_level |> Int64.to_int);
-           ([wake_up; propose_new_block], state))
-         else ([wake_up], state)
-
-     let crash_fault_node : event_handler =
-       let open Tenderbatter in
-       fun params time event private_key state ->
-         if Random.bool () then (
-           Format.printf "Node %d crashing.\n%!" (Node.Id.to_int state.self);
-           ([Effect.Shut_down], state))
-         else good_node params time event private_key state *)

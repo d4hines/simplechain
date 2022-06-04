@@ -3,7 +3,25 @@ open Tenderbatter
 open Dolev_strong
 open Crypto
 
-let good_node = "good node"
+let honest_node = "honest node"
+
+let get_honest_states states =
+  Array.to_list states
+  |> List.filter_map Fun.id
+  |> List.filter (fun (node_id, _, _) ->
+         Node.Id.get_label node_id = honest_node)
+  |> List.map (fun (_, _, x) -> x)
+
+module Make (Params : Singleshot.PARAMS) = struct
+  open Singleshot.Make (Params)
+
+  let validity ~expected_value states =
+    let states = get_honest_states states in
+    List.for_all
+      (fun Algorithm.{ final_value; _ } -> final_value = Some expected_value)
+      states
+end
+
 (*
    (* Checks that every block in the list is
       either equal or the next block about to be produced.

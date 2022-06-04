@@ -1,5 +1,0 @@
-(library
- (name tenderbake_test)
- (libraries alcotest tenderbatter_test_helpers tenderbake tenderbatter)
- (flags
-  (:standard -w +A-4-40-41-42-44-45-48-70 -warn-error +A-3-44)))

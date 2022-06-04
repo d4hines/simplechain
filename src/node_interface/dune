@@ -1,7 +1,3 @@
 (library
  (name node_interface)
- (libraries crypto digestif tenderbatter qcheck)
- (modules_without_implementation node_interface networking_interface)
- ; TODO: This seems wrong. How do I get dune
- ; to wrap all the modules in this folder behind a module Consenus?
- (wrapped false))
+ (libraries crypto digestif tenderbatter qcheck))

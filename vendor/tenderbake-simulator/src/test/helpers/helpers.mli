@@ -36,7 +36,7 @@ module Make (A : Simulator.Algorithm) : sig
     nodes : (int * string * event_handler) list;
     message_delay : Network.Delay.t option;
     predicates : (string * predicate) list;
-    seeds : int list;
+    seed : int;
     final_state_check :
       (Node.Id.t * Time.t option * A.node_state) option array -> bool;
     log_check : Log.t -> bool;
@@ -51,5 +51,5 @@ module Make (A : Simulator.Algorithm) : sig
   (** Given an access function, create a predicate to test that all
       transactions in a node's blockchain are unique. *)
 
-  val case : config -> unit Alcotest.test_case
+  val case : config -> unit
 end

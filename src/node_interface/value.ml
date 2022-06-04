@@ -8,7 +8,7 @@ module type VALUE = sig
 
   val encoding : t Data_encoding.t
   val sign : private_key:Signature.private_key -> t -> BLAKE2B.t Signed.t
-  val verify_signature : signature:BLAKE2B.t Signed.t -> t -> bool
+  val hash : t -> BLAKE2B.t
 end
 
 module Value_and_signatures (Value : VALUE) = struct
@@ -16,6 +16,10 @@ module Value_and_signatures (Value : VALUE) = struct
     value : Value.t;
     signatures : BLAKE2B.t Signed.t list;
   }
+
+  let verify_signature ~signature value =
+    BLAKE2B.equal (Value.hash value) (Signed.get_value signature)
+    && Signed.is_valid BLAKE2B.encoding signature
 
   let get_signatures (_, signatures) : t = signatures
 
@@ -26,9 +30,7 @@ module Value_and_signatures (Value : VALUE) = struct
     { value; signatures = [signature] }
 
   let is_valid { value; signatures } =
-    List.for_all
-      (fun signature -> Value.verify_signature ~signature value)
-      signatures
+    List.for_all (fun signature -> verify_signature ~signature value) signatures
 
   let add_signature { value; signatures } private_key =
     if is_valid { value; signatures } then

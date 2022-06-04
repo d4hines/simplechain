@@ -36,7 +36,7 @@ module Make (A : Simulator.Algorithm) = struct
     nodes : (int * string * event_handler) list;
     message_delay : Network.Delay.t option;
     predicates : (string * predicate) list;
-    seeds : int list;
+    seed : int;
     final_state_check :
       (Node.Id.t * Time.t option * A.node_state) option array -> bool;
     log_check : Log.t -> bool;
@@ -67,37 +67,35 @@ module Make (A : Simulator.Algorithm) = struct
     let nodes = config.nodes in
     let test_name = config.test_name in
     let predicates = config.predicates in
+    let seed = config.seed in
 
-    let test_with_seed seed =
-      let log, final_state, pred_results =
-        run_simulation ?message_delay ~seed ~predicates ~params ~iterations
-          ~nodes ()
-      in
-      let save_log ~failed =
-        let dir = ensure_log_dir test_name in
-        let filename =
-          Filename.concat dir
-          @@ Format.sprintf "seed-%d%s" seed (if failed then "-failed" else "")
-        in
-        Log.save_to_file log (filename ^ ".json");
-        Log.pp_to_file log (filename ^ ".txt")
-      in
-      if config.debug then save_log ~failed:false;
-      let check_predicate (name, failed_at) =
-        match failed_at with
-        | None -> ()
-        | Some i ->
-            save_log ~failed:true;
-            Alcotest.failf "predicate %s failed at iteration %d (seed %d)" name
-              i seed
-      in
-      List.iter check_predicate pred_results;
-      if not (config.final_state_check final_state) then (
-        save_log ~failed:true;
-        Alcotest.failf "the final state check failed (seed %d)" seed);
-      if not (config.log_check log) then (
-        save_log ~failed:true;
-        Alcotest.failf "the log check failed (seed %d)" seed)
+    let log, final_state, pred_results =
+      run_simulation ?message_delay ~seed ~predicates ~params ~iterations ~nodes
+        ()
     in
-    (test_name, `Slow, fun () -> List.iter test_with_seed config.seeds)
+    let save_log ~failed =
+      let dir = ensure_log_dir test_name in
+      let filename =
+        Filename.concat dir
+        @@ Format.sprintf "seed-%d%s" seed (if failed then "-failed" else "")
+      in
+      Log.save_to_file log (filename ^ ".json");
+      Log.pp_to_file log (filename ^ ".txt")
+    in
+    if config.debug then save_log ~failed:false;
+    let check_predicate (name, failed_at) =
+      match failed_at with
+      | None -> ()
+      | Some i ->
+          save_log ~failed:true;
+          Alcotest.failf "predicate %s failed at iteration %d (seed %d)" name i
+            seed
+    in
+    List.iter check_predicate pred_results;
+    if not (config.final_state_check final_state) then (
+      save_log ~failed:true;
+      Alcotest.failf "the final state check failed (seed %d)" seed);
+    if not (config.log_check log) then (
+      save_log ~failed:true;
+      Alcotest.failf "the log check failed (seed %d)" seed)
 end
