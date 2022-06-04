@@ -15,10 +15,10 @@ let get_honest_states states =
 module Make (Params : Singleshot.PARAMS) = struct
   open Singleshot.Make (Params)
 
-  let validity ~expected_value states =
+  let all_honest_nodes_agree ~expected_value states =
     let states = get_honest_states states in
     List.for_all
-      (fun Algorithm.{ final_value; _ } -> final_value = Some expected_value)
+      (fun Algorithm.{ final_value; _ } -> final_value = expected_value)
       states
 end
 

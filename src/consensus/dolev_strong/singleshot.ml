@@ -160,22 +160,22 @@ module Make (Params : PARAMS) = struct
         | Error _ ->
           Format.printf "Already got this message";
           exit ([], state))
-      | Event.Wake_up ->
+      | Event.Wake_up -> (
         let current_round = state.round in
         let state = { state with round = state.round + 1 } in
-        if current_round < (2 * params.f) + 1 then
-          let next_time = Time.add time (Time.from_float params.delta) in
-          let wake_up = Effect.Set_wake_up_time next_time in
-          if Params.is_proposer state.self then (
-            Format.printf "proposing value";
-            let value = Params.get_next_value () in
-            let propose_new_value = propose_new_value ~private_key value in
-            let state = { state with final_value = Some value } in
-            exit ([wake_up; propose_new_value], state))
-          else (
-            Format.printf "not propser, doing nothing";
-            exit ([wake_up], state))
-        else
+        let next_time = Time.add time (Time.from_float params.delta) in
+        let wake_up = Effect.Set_wake_up_time next_time in
+        match (current_round, Params.is_proposer state.self) with
+        | 0, true ->
+          let () = Format.printf "proposing value" in
+          let value = Params.get_next_value () in
+          let propose_new_value = propose_new_value ~private_key value in
+          let state = { state with final_value = Some value } in
+          exit ([propose_new_value; wake_up], state)
+        | _ when current_round < (2 * params.f) + 1 ->
+          let () = Format.printf "nothing to do" in
+          exit ([wake_up], state)
+        | _ ->
           (* Consensus is over. Terminate indefinitely with a final value *)
           let final_value =
             if Params.is_proposer state.self then
@@ -191,7 +191,7 @@ module Make (Params : PARAMS) = struct
           in
           Format.printf "terminating with value: %s" final_value_str;
           let new_state = { state with final_value } in
-          exit ([], new_state))
+          exit ([], new_state)))
 
   let crash_fault_node : event_handler =
    fun params time event private_key state ->
@@ -199,4 +199,72 @@ module Make (Params : PARAMS) = struct
       Format.printf "Node %d crashing.\n%!" (Node.Id.to_int state.self);
       ([Effect.Shut_down], state))
     else honest_node params time event private_key state
+
+  let crash_fault_immediately : event_handler =
+   fun _params _time _event _private_key state ->
+    Format.printf "Node %d crashing.\n%!" (Node.Id.to_int state.self);
+    ([Effect.Shut_down], state)
+
+  let byzantine_proposer : event_handler =
+   fun params time event private_key state ->
+    match event with
+    | Event.Message_received _ -> ([], state)
+    | Event.Wake_up ->
+      let current_round = state.round in
+      if current_round = 0 && Params.is_proposer state.self then assert false
+      else assert false
+  (*
+
+      let byzantine_node : event_handler =
+       fun params time event private_key state ->
+          match event with
+          | Event.Message_received value_and_signatures -> (
+            match
+              Convincing_values.add_value ~current_round:state.round
+                ~value_and_signatures state.convincing_values
+            with
+            | Ok convincing_values ->
+              Format.printf "got a convincing message ";
+              let state = { state with convincing_values } in
+              let broadcast =
+                sign_block_and_broadcast ~private_key value_and_signatures
+                (* TODO: I already checked that the signatures were valid. Refactor this away. *)
+                |> Result.get_ok
+              in
+              exit ([broadcast], state)
+            | Error _ ->
+              Format.printf "Already got this message";
+              exit ([], state))
+          | Event.Wake_up -> (
+            let current_round = state.round in
+            let state = { state with round = state.round + 1 } in
+            let next_time = Time.add time (Time.from_float params.delta) in
+            let wake_up = Effect.Set_wake_up_time next_time in
+            match (current_round, Params.is_proposer state.self) with
+            | 0, true ->
+              let () = Format.printf "proposing value" in
+              let value = Params.get_next_value () in
+              let propose_new_value = propose_new_value ~private_key value in
+              let state = { state with final_value = Some value } in
+              exit ([propose_new_value; wake_up], state)
+            | _ when current_round < (2 * params.f) + 1 ->
+              let () = Format.printf "nothing to do" in
+              exit ([wake_up], state)
+            | _ ->
+              (* Consensus is over. Terminate indefinitely with a final value *)
+              let final_value =
+                if Params.is_proposer state.self then
+                  (* If we are the proposer, we already know the final value *)
+                  state.final_value
+                else Convincing_values.get_convincing_value state.convincing_values
+              in
+              let final_value_str =
+                match final_value with
+                | Some x ->
+                  Format.sprintf "Some %s" (x |> Obj.magic |> Int64.to_string)
+                | None -> "None"
+              in
+              Format.printf "terminating with value: %s" final_value_str;
+              let new_state = { state with final_value } in
+              exit ([], new_state))) *)
 end
